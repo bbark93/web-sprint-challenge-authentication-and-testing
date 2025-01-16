@@ -1,20 +1,20 @@
-const router = require('express').Router();
-const bcrypt = require('bcryptjs')
+const router = require("express").Router();
+const bcrypt = require("bcryptjs");
 
-const Users = require('../users/users-model.js')
+const Users = require("../users/users-model.js");
 
-router.post('/register', (req, res, next) => {
-  let user = req.body
-  const hash = bcrypt.hashSync(user.password, 8) // 2 ^ n
-  user.password = hash
+router.post("/register", (req, res, next) => {
+  let user = req.body;
+  const hash = bcrypt.hashSync(user.password, 8); // 2 ^ n
+  user.password = hash;
 
   Users.add(user)
-    .then(saved => {
+    .then((saved) => {
       res.status(201).json({
-        message: `Great to have you with us, ${saved.username}`
-      })
+        message: `Great to have you with us, ${saved.username}`,
+      });
     })
-    .catch(next)
+    .catch(next);
   // res.end('implement register, please!');
   /*
     IMPLEMENT
@@ -43,8 +43,24 @@ router.post('/register', (req, res, next) => {
   */
 });
 
-router.post('/login', (req, res) => {
-  res.end('implement login, please!');
+router.post("/login", (req, res, next) => {
+  let { username, password } = req.body;
+
+  Users.findBy({ username })
+    .first()
+    .then((user) => {
+      if (user && bcrypt.compareSync(password, user.password)) {
+        // this is the critical line. Session saved, cookie set on client:
+        req.session.user = user;
+        res.status(200).json({
+          message: `Welcome back ${user.username}, have a cookie!`,
+        });
+      } else {
+        next({ status: 401, message: "Invalid Credentials" });
+      }
+    })
+    .catch(next);
+  // res.end('implement login, please!');
   /*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
