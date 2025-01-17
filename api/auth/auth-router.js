@@ -1,9 +1,11 @@
 const router = require("express").Router();
 const bcrypt = require("bcryptjs");
-const jwt = require('jsonwebtoken')
+const jwt = require("jsonwebtoken");
+
+const { validateLogin } = require('../middleware/validateLogin.js')
 
 const Users = require("../users/users-model.js");
-const { BCRYPT_ROUNDS, JWT_SECRET } = require('../../config')
+const { BCRYPT_ROUNDS, JWT_SECRET } = require("../../config");
 
 router.post("/register", (req, res, next) => {
   let user = req.body;
@@ -45,25 +47,26 @@ router.post("/register", (req, res, next) => {
   */
 });
 
-router.post("/login", (req, res, next) => {
-  let { username, password } = req.body
+router.post("/login", validateLogin, (req, res, next) => {
+  let { username, password } = req.body;
 
   Users.findBy({ username }) // it would be nice to have middleware do this
     .then(([user]) => {
       if (user && bcrypt.compareSync(password, user.password)) {
-        const token = generateToken(user) // new line
+        const token = generateToken(user); // new line
 
         // the server needs to return the token to the client
         // this doesn't happen automatically like it happens with cookies
         res.status(200).json({
           message: `Welcome ${user.username}`,
           token, // attach the token as part of the response
-        })
+        });
       } else {
-        next({ status: 401, message: 'Invalid Credentials' })
+        next({ status: 401, message: "invalid credentials" });
       }
     })
-    .catch(next)
+    .catch(next);
+
   // res.end('implement login, please!');
   /*
     IMPLEMENT
@@ -95,11 +98,11 @@ function generateToken(user) {
     subject: user.id,
     username: user.username,
     role: user.role,
-  }
+  };
   const options = {
-    expiresIn: '1d',
-  }
-  return jwt.sign(payload, JWT_SECRET, options)
+    expiresIn: "1d",
+  };
+  return jwt.sign(payload, JWT_SECRET, options);
 }
 
 module.exports = router;
