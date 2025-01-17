@@ -1,11 +1,13 @@
 const router = require("express").Router();
 const bcrypt = require("bcryptjs");
+const jwt = require('jsonwebtoken')
 
 const Users = require("../users/users-model.js");
+const { BCRYPT_ROUNDS, JWT_SECRET } = require('../../config')
 
 router.post("/register", (req, res, next) => {
   let user = req.body;
-  const hash = bcrypt.hashSync(user.password, 8); // 2 ^ n
+  const hash = bcrypt.hashSync(user.password, BCRYPT_ROUNDS); // 2 ^ n
   user.password = hash;
 
   Users.add(user)
@@ -44,22 +46,24 @@ router.post("/register", (req, res, next) => {
 });
 
 router.post("/login", (req, res, next) => {
-  let { username, password } = req.body;
+  let { username, password } = req.body
 
-  Users.findBy({ username })
-    .first()
-    .then((user) => {
+  Users.findBy({ username }) // it would be nice to have middleware do this
+    .then(([user]) => {
       if (user && bcrypt.compareSync(password, user.password)) {
-        // this is the critical line. Session saved, cookie set on client:
-        req.session.user = user;
+        const token = generateToken(user) // new line
+
+        // the server needs to return the token to the client
+        // this doesn't happen automatically like it happens with cookies
         res.status(200).json({
-          message: `Welcome back ${user.username}, have a cookie!`,
-        });
+          message: `Welcome ${user.username}`,
+          token, // attach the token as part of the response
+        })
       } else {
-        next({ status: 401, message: "Invalid Credentials" });
+        next({ status: 401, message: 'Invalid Credentials' })
       }
     })
-    .catch(next);
+    .catch(next)
   // res.end('implement login, please!');
   /*
     IMPLEMENT
@@ -85,5 +89,17 @@ router.post("/login", (req, res, next) => {
       the response body should include a string exactly as follows: "invalid credentials".
   */
 });
+
+function generateToken(user) {
+  const payload = {
+    subject: user.id,
+    username: user.username,
+    role: user.role,
+  }
+  const options = {
+    expiresIn: '1d',
+  }
+  return jwt.sign(payload, JWT_SECRET, options)
+}
 
 module.exports = router;
