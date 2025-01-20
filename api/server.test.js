@@ -31,20 +31,19 @@ describe("[POST] /register", () => {
   describe("registers user", () => {
     it("adds user to the db", async () => {
       let users;
-      await User.add(user1);
+      const res = await request(server).post('/api/auth/register').send(user1)
       users = await db("users");
       expect(users).toHaveLength(1);
     });
-    it("inserted username and password", async () => {
-      const user = await User.add(user1);
-      expect(user).toMatchObject({ id: 1, ...user });
+    it("responds with correct status", async () => {
+      const res = await request(server).post('/api/auth/register').send(user1)
+      expect(res.status).toBe(201)
     });
   });
 });
 
 describe('[POST] /login', () => {
   it('responds with the correct message on valid credentials', async () => {
-    // await User.add(user1);
     await request(server).post('/api/auth/register').send(user1)
     const res = await request(server).post('/api/auth/login').send(user1)
     expect(res.body.message).toMatch(/welcome bbark/i)
