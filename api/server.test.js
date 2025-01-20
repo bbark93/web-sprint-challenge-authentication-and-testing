@@ -44,7 +44,8 @@ describe("[POST] /register", () => {
 
 describe('[POST] /login', () => {
   it('responds with the correct message on valid credentials', async () => {
-    await User.add(user1);
+    // await User.add(user1);
+    await request(server).post('/api/auth/register').send(user1)
     const res = await request(server).post('/api/auth/login').send(user1)
     expect(res.body.message).toMatch(/welcome bbark/i)
   })
