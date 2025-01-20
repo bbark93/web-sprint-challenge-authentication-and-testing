@@ -51,7 +51,8 @@ router.post("/login", validateLogin, (req, res, next) => {
   let { username, password } = req.body;
 
   Users.findBy({ username }) // it would be nice to have middleware do this
-    .then(([user]) => {
+    .then((user) => {
+      console.log('User from DB:', user); // Check what is returned
       if (user && bcrypt.compareSync(password, user.password)) {
         const token = generateToken(user); // new line
 
@@ -66,8 +67,23 @@ router.post("/login", validateLogin, (req, res, next) => {
       }
     })
     .catch(next);
+});
 
-  // res.end('implement login, please!');
+function generateToken(user) {
+  const payload = {
+    subject: user.id,
+    username: user.username,
+    role: user.role,
+  };
+  const options = {
+    expiresIn: "1d",
+  };
+  return jwt.sign(payload, JWT_SECRET, options);
+}
+
+module.exports = router;
+
+// res.end('implement login, please!');
   /*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
@@ -91,18 +107,3 @@ router.post("/login", validateLogin, (req, res, next) => {
     4- On FAILED login due to `username` not existing in the db, or `password` being incorrect,
       the response body should include a string exactly as follows: "invalid credentials".
   */
-});
-
-function generateToken(user) {
-  const payload = {
-    subject: user.id,
-    username: user.username,
-    role: user.role,
-  };
-  const options = {
-    expiresIn: "1d",
-  };
-  return jwt.sign(payload, JWT_SECRET, options);
-}
-
-module.exports = router;

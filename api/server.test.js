@@ -3,7 +3,7 @@ const db = require("../data/dbConfig.js");
 const server = require("./server.js");
 const User = require("../api/users/users-model.js");
 
-const user1 = { username: "bbark", password: 1234 };
+const user1 = { username: "bbark", password: '1234' };
 
 beforeAll(async () => {
   await db.migrate.rollback(); // so any changes to migration files are picked up
@@ -42,6 +42,10 @@ describe("[POST] /register", () => {
   });
 });
 
-// describe('[POST] /login', () => {
-//   describe('')
-// })
+describe('[POST] /login', () => {
+  it('responds with the correct message on valid credentials', async () => {
+    await User.add(user1);
+    const res = await request(server).post('/api/auth/login').send(user1)
+    expect(res.body.message).toMatch(/welcome bbark/i)
+  })
+})
