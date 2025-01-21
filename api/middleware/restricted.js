@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const JWT_SECRET = require("../../config");
+const {JWT_SECRET} = require("../../config");
 
 module.exports = (req, res, next) => {
   const token = req.headers.authorization;
@@ -7,12 +7,10 @@ module.exports = (req, res, next) => {
   if (token) {
     console.log("token: ", token);
     jwt.verify(token, JWT_SECRET, (err, decodedToken) => {
-      console.log("decodedToken: ", decodedToken);
       if (err) {
-        next({ status: 401, message: "token invalid" });
+        next({ status: 401, message: err.message });
       } else {
         req.decodedJwt = decodedToken;
-        console.log("decoded token", req.decodedJwt);
 
         next();
       }
