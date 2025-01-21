@@ -2,12 +2,12 @@ const router = require("express").Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-const { validateLogin } = require('../middleware/validateLogin.js')
+const { validateLogin, isUnique } = require('../middleware/users-middleware')
 
 const Users = require("../users/users-model.js");
 const { BCRYPT_ROUNDS, JWT_SECRET } = require("../../config");
 
-router.post("/register", (req, res, next) => {
+router.post("/register", isUnique, (req, res, next) => {
   let user = req.body;
   const hash = bcrypt.hashSync(user.password, BCRYPT_ROUNDS); // 2 ^ n
   user.password = hash;
