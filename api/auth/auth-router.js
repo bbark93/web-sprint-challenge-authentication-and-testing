@@ -52,10 +52,9 @@ router.post("/login", validateLogin, (req, res, next) => {
 
   Users.findBy({ username }) // it would be nice to have middleware do this
     .then((user) => {
-      console.log('User from DB:', user); // Check what is returned
       if (user && bcrypt.compareSync(password, user.password)) {
         const token = generateToken(user); // new line
-
+        
         // the server needs to return the token to the client
         // this doesn't happen automatically like it happens with cookies
         res.status(200).json({
